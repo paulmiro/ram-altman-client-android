@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -46,8 +47,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+            .launch(android.Manifest.permission.POST_NOTIFICATIONS)
         requestBatteryExemption()
         val settings = Settings(this)
+        if (settings.enabled) settings.schedule() // resumes reporting after a reboot or a killed service
         setContent {
             val context = LocalContext.current
             val colors = if (isSystemInDarkTheme()) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -57,7 +61,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Without this exemption Doze and app standby delay background work far beyond the interval.
+    // Without this exemption Doze and app standby can still cut off the network for the service.
     private fun requestBatteryExemption() {
         if (getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)) return
         startActivity(
@@ -112,7 +116,7 @@ fun SettingsScreen(settings: Settings) {
 
             NumberSetting(
                 label = "Interval (minutes)",
-                hint = "Minimum $MIN_INTERVAL_MINUTES",
+                hint = "At least $MIN_INTERVAL_MINUTES",
                 range = MIN_INTERVAL_MINUTES..Int.MAX_VALUE,
                 setting = settings::intervalMinutes,
                 onSaved = settings::schedule,

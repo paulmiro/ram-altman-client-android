@@ -1,18 +1,12 @@
 package de.paulmiro.ramaltman
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.content.edit
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import java.util.concurrent.TimeUnit
 
-const val MIN_INTERVAL_MINUTES = 15 // WorkManager does not run periodic work more often.
-const val DEFAULT_TIMEOUT_MINUTES = 20
+const val MIN_INTERVAL_MINUTES = 1
+const val DEFAULT_TIMEOUT_MINUTES = 5
 const val MIN_TIMEOUT_MINUTES = 1 // Limits of the API's timeout_minutes.
 const val MAX_TIMEOUT_MINUTES = 60
 
@@ -44,7 +38,7 @@ class Settings(private val context: Context) {
         set(v) = prefs.edit { putString("color", v) }
 
     var intervalMinutes: Int
-        get() = prefs.getInt("intervalMinutes", MIN_INTERVAL_MINUTES)
+        get() = prefs.getInt("intervalMinutes", 1)
         set(v) = prefs.edit { putInt("intervalMinutes", v) }
 
     var timeoutMinutes: Int
@@ -55,25 +49,14 @@ class Settings(private val context: Context) {
         get() = prefs.getString("status", "")!!
         set(v) = prefs.edit { putString("status", v) }
 
-    /** Starts, updates or stops the periodic report according to the current settings. */
+    /** Starts, restarts or stops the reporting service according to the current settings. */
     fun schedule() {
-        val workManager = WorkManager.getInstance(context)
-        if (!enabled) {
-            workManager.cancelUniqueWork(WORK_NAME)
-            return
-        }
-        val request = PeriodicWorkRequestBuilder<ReportWorker>(intervalMinutes.toLong(), TimeUnit.MINUTES)
-            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .build()
-        workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
+        val intent = Intent(context, ReportService::class.java)
+        if (enabled) context.startForegroundService(intent) else context.stopService(intent)
     }
 
     /** Sends one report right now, independent of the on/off switch. */
     fun reportNow() {
-        WorkManager.getInstance(context).enqueue(OneTimeWorkRequestBuilder<ReportWorker>().build())
-    }
-
-    private companion object {
-        const val WORK_NAME = "report"
+        Thread { sendReport(context) }.start()
     }
 }

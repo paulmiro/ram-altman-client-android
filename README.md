@@ -23,10 +23,12 @@ Alternatively, download the APK from the
    - **Username**: your name on the dashboard
    - **Hostname**: name of this device (letters, digits, `.`, `_`, `-`)
    - **Color** (optional): your dashboard color, e.g. `#3d8bff`
-   - **Interval**: minutes between reports (at least 15, an Android limit)
-   - **Timeout**: minutes the dashboard keeps this device after a report (1-60, default 20).
+   - **Interval**: minutes between reports (default 1)
+   - **Timeout**: minutes the dashboard keeps this device after a report (1-60, default 5).
      Keep it above the interval, or the device will disappear between reports.
-2. Turn on **Report memory usage**. The first report is sent right away.
+2. Allow notifications and the battery exemption when asked, then turn on **Report memory usage**.
+   The first report is sent right away. While reporting, a persistent notification is shown;
+   Android requires it to keep the app running in the background.
 
 Everything is saved as you type. The line under the switch shows the result of the last report.
 Turn the switch off to stop reporting.
