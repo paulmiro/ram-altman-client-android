@@ -1,7 +1,10 @@
 package de.paulmiro.ramaltman
 
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -43,6 +46,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestBatteryExemption()
         val settings = Settings(this)
         setContent {
             val context = LocalContext.current
@@ -51,6 +55,17 @@ class MainActivity : ComponentActivity() {
                 SettingsScreen(settings)
             }
         }
+    }
+
+    // Without this exemption Doze and app standby delay background work far beyond the interval.
+    private fun requestBatteryExemption() {
+        if (getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)) return
+        startActivity(
+            Intent(
+                android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:$packageName"),
+            )
+        )
     }
 }
 
