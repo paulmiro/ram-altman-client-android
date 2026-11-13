@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
@@ -65,6 +66,11 @@ class Settings(private val context: Context) {
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
             .build()
         workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
+    }
+
+    /** Sends one report right now, independent of the on/off switch. */
+    fun reportNow() {
+        WorkManager.getInstance(context).enqueue(OneTimeWorkRequestBuilder<ReportWorker>().build())
     }
 
     private companion object {
