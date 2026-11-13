@@ -11,6 +11,9 @@ import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 
 const val MIN_INTERVAL_MINUTES = 15 // WorkManager does not run periodic work more often.
+const val DEFAULT_TIMEOUT_MINUTES = 20
+const val MIN_TIMEOUT_MINUTES = 1 // Limits of the API's timeout_minutes.
+const val MAX_TIMEOUT_MINUTES = 60
 
 class Settings(private val context: Context) {
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -42,6 +45,10 @@ class Settings(private val context: Context) {
     var intervalMinutes: Int
         get() = prefs.getInt("intervalMinutes", MIN_INTERVAL_MINUTES)
         set(v) = prefs.edit { putInt("intervalMinutes", v) }
+
+    var timeoutMinutes: Int
+        get() = prefs.getInt("timeoutMinutes", DEFAULT_TIMEOUT_MINUTES)
+        set(v) = prefs.edit { putInt("timeoutMinutes", v) }
 
     var status: String
         get() = prefs.getString("status", "")!!

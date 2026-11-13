@@ -57,7 +57,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SettingsScreen(settings: Settings) {
     var enabled by remember { mutableStateOf(settings.enabled) }
-    var interval by remember { mutableStateOf(settings.intervalMinutes.toString()) }
     var status by remember { mutableStateOf(settings.status) }
 
     // The worker writes its result into the prefs; mirror it here while the screen is open.
@@ -95,26 +94,50 @@ fun SettingsScreen(settings: Settings) {
             TextSetting("Hostname", settings::hostname)
             TextSetting("Color (optional, #rrggbb)", settings::color)
 
-            val intervalValid = (interval.toIntOrNull() ?: 0) >= MIN_INTERVAL_MINUTES
-            OutlinedTextField(
-                value = interval,
-                onValueChange = {
-                    interval = it
-                    val minutes = it.toIntOrNull() ?: return@OutlinedTextField
-                    if (minutes >= MIN_INTERVAL_MINUTES) {
-                        settings.intervalMinutes = minutes
-                        settings.schedule()
-                    }
-                },
-                label = { Text("Interval (minutes)") },
-                supportingText = { Text("Minimum $MIN_INTERVAL_MINUTES") },
-                isError = !intervalValid,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
+            NumberSetting(
+                label = "Interval (minutes)",
+                hint = "Minimum $MIN_INTERVAL_MINUTES",
+                range = MIN_INTERVAL_MINUTES..Int.MAX_VALUE,
+                setting = settings::intervalMinutes,
+                onSaved = settings::schedule,
+            )
+            NumberSetting(
+                label = "Timeout (minutes)",
+                hint = "The dashboard drops this device after this long without a report ($MIN_TIMEOUT_MINUTES-$MAX_TIMEOUT_MINUTES)",
+                range = MIN_TIMEOUT_MINUTES..MAX_TIMEOUT_MINUTES,
+                setting = settings::timeoutMinutes,
             )
         }
     }
+}
+
+/** A number field that saves into [setting] only while the value is inside [range]. */
+@Composable
+fun NumberSetting(
+    label: String,
+    hint: String,
+    range: IntRange,
+    setting: KMutableProperty0<Int>,
+    onSaved: () -> Unit = {},
+) {
+    var text by remember { mutableStateOf(setting.get().toString()) }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it
+            val number = it.toIntOrNull()
+            if (number != null && number in range) {
+                setting.set(number)
+                onSaved()
+            }
+        },
+        label = { Text(label) },
+        supportingText = { Text(hint) },
+        isError = text.toIntOrNull() !in range,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 /** A text field that saves every change straight into [setting]. */

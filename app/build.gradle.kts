@@ -4,7 +4,7 @@ plugins {
 }
 
 // Bumping this on main triggers a GitHub release (see .github/workflows/release.yml).
-val appVersion = "1.0.1"
+val appVersion = "1.1.0"
 
 android {
     namespace = "de.paulmiro.ramaltman"

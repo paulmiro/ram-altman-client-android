@@ -26,6 +26,7 @@ class ReportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val body = JSONObject()
             .put("free_ram_bytes", memory.availMem)
             .put("total_ram_bytes", memory.totalMem)
+            .put("timeout_minutes", settings.timeoutMinutes)
         if (settings.color.isNotBlank()) body.put("color", settings.color.trim())
 
         val url = settings.serverUrl.trim().trimEnd('/') +
