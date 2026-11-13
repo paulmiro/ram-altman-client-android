@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A memory chip: square body with three pins on each side. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,40h24a2,2 0,0 1,2 2v24a2,2 0,0 1,-2 2h-24a2,2 0,0 1,-2 -2v-24a2,2 0,0 1,2 -2z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M47,34v6M54,34v6M61,34v6M47,68v6M54,68v6M61,68v6M34,47h6M34,54h6M34,61h6M68,47h6M68,54h6M68,61h6" />
+</vector>

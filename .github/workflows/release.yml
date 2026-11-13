@@ -1,0 +1,57 @@
+name: Release
+
+# Builds and publishes a signed APK whenever main contains a version that has no release yet.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check version
+        id: version
+        run: |
+          version=$(grep -oP 'val appVersion = "\K[^"]+' app/build.gradle.kts)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "Release v$version already exists, nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.version.outputs.new == 'true'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - if: steps.version.outputs.new == 'true'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build signed APK
+        if: steps.version.outputs.new == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          export KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILE"
+          ./gradlew assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "ram-altman-v${{ steps.version.outputs.version }}.apk"
+
+      - name: Create release
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${{ steps.version.outputs.version }}
+          gh release create "v$v" "ram-altman-v$v.apk" --title "v$v" --generate-notes --target "$GITHUB_SHA"
